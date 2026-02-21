@@ -1,36 +1,98 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# geoAI – Lokales Geo-LLM
 
-## Getting Started
+Eine lokale Chat-Anwendung mit KI-gestützter Code-Generierung. Läuft komplett offline auf deinem Rechner via [Ollama](https://ollama.com) – keine Cloud, keine API-Keys, volle Datenkontrolle.
 
-First, run the development server:
+## Tech Stack
+
+| Layer | Technologie |
+|---|---|
+| Framework | Next.js 16 (App Router, Webpack) |
+| UI | React 19, ShadCN/UI, Radix, Tailwind CSS 4 |
+| LLM | Ollama + Qwen 2.5 Coder 7B |
+| AI SDK | Vercel AI SDK v6, ollama-ai-provider-v2 |
+| Docs-Suche | TF-IDF Keyword-Suche (zero-dependency) |
+| Linting | Biome |
+
+## Voraussetzungen
+
+- **Node.js** >= 18
+- **Ollama** installiert und laufend (`brew install ollama`)
+- **Qwen 2.5 Coder 7B** Modell geladen:
+
+```bash
+ollama pull qwen2.5-coder:7b
+```
+
+## Installation
+
+```bash
+npm install
+```
+
+## Entwicklung
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Öffne [http://localhost:3000](http://localhost:3000) im Browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Script | Beschreibung |
+|---|---|
+| `npm run dev` | Dev-Server starten |
+| `npm run build` | Production-Build |
+| `npm run lint` | Biome Lint + Format prüfen |
+| `npm run lint:fix` | Biome Auto-Fix |
+| `npm run format` | Nur Formatierung |
+| `npm run chunk-docs` | Dokumentation in Chunks aufteilen |
 
-## Learn More
+## Projektstruktur
 
-To learn more about Next.js, take a look at the following resources:
+```
+app/
+  page.tsx              # Haupt-Chat-UI
+  api/chat/route.ts     # Ollama Streaming-Endpoint
+  actions/docs.ts       # Docs-Suche + Kontext-Injection
+  actions/history.ts    # Chat-Persistenz (.history/)
+components/
+  app-sidebar.tsx       # Sidebar mit Historie, Docs, Dev Mode
+  chat-bubble.tsx       # Nachrichten-Rendering (Markdown + Syntax Highlighting)
+  chat-footer.tsx       # Eingabefeld
+  context-monitor.tsx   # Anzeige der Auto-Referenzen
+  ui/                   # ShadCN UI-Komponenten
+lib/
+  search.ts             # TF-IDF Suchengine für Doc-Chunks
+local-docs/
+  chunks/               # Generierte Themen-Chunks (via chunk-docs)
+  *.md                  # Quelldokumentation (Flowbite/Tailwind)
+scripts/
+  chunk-docs.js         # Zerlegt große Docs in thematische Chunks
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Dokumentation hinzufügen
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Lege eine `.md`-Datei in `local-docs/` ab
+2. Führe `npm run chunk-docs` aus (Dateien > 50 KB werden automatisch gechunkt)
+3. Die Suche findet die neuen Chunks beim nächsten Request
 
-## Deploy on Vercel
+## Wie die Auto-Kontext-Suche funktioniert
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Beim Absenden einer Nachricht sucht das System automatisch die relevantesten Doc-Chunks per TF-IDF und injiziert sie in den Prompt:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+Benutzer tippt Frage
+       |
+  [TF-IDF Suche] --> Top 2-3 relevante Chunks
+       |
+  Prompt = Auto-Referenzen + Manueller Kontext + Frage
+       |
+  [Qwen 2.5 Coder 7B via Ollama] --> Streaming-Antwort
+```
+
+Kein Embedding-Modell, keine Vektor-Datenbank – reine Keyword-Relevanz mit Heading-Boost, gecacht im Speicher.
+
+## Lizenz
+
+Privat

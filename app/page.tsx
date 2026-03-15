@@ -10,7 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { useChat } from "@ai-sdk/react"
 import type { UIMessage } from "ai"
-import { Bot, CheckCircle2, Loader2, Plus } from "lucide-react"
+import { Bot, CheckCircle2, FolderDown, Loader2, Plus } from "lucide-react"
 import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { ToolInvocationPart } from "@/components/tool-call-view"
 import {
@@ -395,6 +395,37 @@ export default function ChatPage() {
         lastScrolledMessageIdRef.current = null
     }, [setMessages])
 
+    const [isSaving, setIsSaving] = useState(false)
+    const saveLastResponse = useCallback(async (): Promise<void> => {
+        if (!workDirRef.current) return
+        const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant")
+        if (!lastAssistant) return
+        const text = getMessageText(lastAssistant)
+        if (!text) return
+        setIsSaving(true)
+        try {
+            const res = await fetch("/api/agent/save-files", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text, workDir: workDirRef.current }),
+            })
+            const data = (await res.json()) as { written?: string[]; skipped?: string[] }
+            const allMentioned = [
+                ...(data.written ?? []),
+                ...(data.skipped ?? []).map((f) => `${f} (Snippet – nicht überschrieben)`),
+            ]
+            if (allMentioned.length > 0) {
+                setSavedFiles(allMentioned)
+                if (savedFilesTimerRef.current) clearTimeout(savedFilesTimerRef.current)
+                savedFilesTimerRef.current = setTimeout(() => setSavedFiles([]), 8000)
+            }
+        } catch {
+            // ignore
+        } finally {
+            setIsSaving(false)
+        }
+    }, [messages])
+
     const toggleFile = useCallback((file: string): void => {
         setSelectedFiles((prev) =>
             prev.includes(file) ? prev.filter((f) => f !== file) : [...prev, file],
@@ -534,16 +565,38 @@ export default function ChatPage() {
                     </ScrollArea>
                 </div>
 
-                {/* Saved-files Notification */}
-                {savedFiles.length > 0 && (
-                    <div className="shrink-0 border-t border-green-500/20 bg-green-500/5 px-6 py-2 animate-in fade-in duration-300">
-                        <div className="mx-auto max-w-3xl flex items-center gap-2">
-                            <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-green-500" />
-                            <span className="text-[11px] text-green-700 dark:text-green-400 font-medium">
-                                Gespeichert in{" "}
-                                <span className="font-mono">{workDir || "Projekt-Root"}</span>:{" "}
-                                {savedFiles.join(", ")}
-                            </span>
+                {/* Agent-Modus: Manuell speichern + Saved-files Notification */}
+                {agentMode && !isLoading && messages.some((m) => m.role === "assistant") && workDir && (
+                    <div className="shrink-0 border-t border-border/20 bg-background/60 px-6 py-1.5">
+                        <div className="mx-auto max-w-3xl flex items-center justify-between">
+                            {savedFiles.length > 0 ? (
+                                <div className="flex items-center gap-2">
+                                    <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-green-500" />
+                                    <span className="text-[11px] text-green-700 dark:text-green-400 font-medium">
+                                        Gespeichert in{" "}
+                                        <span className="font-mono">{workDir}</span>:{" "}
+                                        {savedFiles.join(", ")}
+                                    </span>
+                                </div>
+                            ) : (
+                                <span className="text-[11px] text-muted-foreground/50">
+                                    Ziel: <span className="font-mono">{workDir.split("/").slice(-2).join("/")}</span>
+                                </span>
+                            )}
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={saveLastResponse}
+                                disabled={isSaving}
+                                className="h-6 gap-1.5 text-[10px] text-muted-foreground hover:text-primary px-2"
+                            >
+                                {isSaving ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                ) : (
+                                    <FolderDown className="h-3 w-3" />
+                                )}
+                                Jetzt speichern
+                            </Button>
                         </div>
                     </div>
                 )}

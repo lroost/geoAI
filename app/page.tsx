@@ -150,6 +150,7 @@ export default function ChatPage() {
     workDirRef.current = workDir
     const techStackRef = useRef(techStack)
     techStackRef.current = techStack
+    const savedFilesTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
     const { messages, setMessages, sendMessage, status } = useChat({
         api: agentMode ? "/api/agent" : "/api/chat",
@@ -240,12 +241,17 @@ export default function ChatPage() {
                 ]
                 if (allMentioned.length > 0) {
                     setSavedFiles(allMentioned)
-                    setTimeout(() => setSavedFiles([]), 8000)
+                    if (savedFilesTimerRef.current) clearTimeout(savedFilesTimerRef.current)
+                    savedFilesTimerRef.current = setTimeout(() => setSavedFiles([]), 8000)
                 }
             } catch {
                 // Fehler still ignorieren — Schreiben ist best-effort
             }
         })()
+
+        return () => {
+            if (savedFilesTimerRef.current) clearTimeout(savedFilesTimerRef.current)
+        }
     }, [status, agentMode, messages])
 
     useEffect(() => {
@@ -372,6 +378,8 @@ export default function ChatPage() {
         setMessages([])
         setInput("")
         setAutoContext(null)
+        setSavedFiles([])
+        if (savedFilesTimerRef.current) clearTimeout(savedFilesTimerRef.current)
         lastScrolledMessageIdRef.current = null
     }, [setMessages])
 
@@ -382,6 +390,8 @@ export default function ChatPage() {
         setMessages([])
         setInput("")
         setAutoContext(null)
+        setSavedFiles([])
+        if (savedFilesTimerRef.current) clearTimeout(savedFilesTimerRef.current)
         lastScrolledMessageIdRef.current = null
     }, [setMessages])
 

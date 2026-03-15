@@ -81,8 +81,9 @@ export async function getChatHistory() {
 
 export async function generateChatTitle(firstMessage: string) {
     try {
+        const model = process.env.OLLAMA_MODEL ?? "qwen2.5-coder:7b"
         const { text } = await generateText({
-            model: ollama("qwen2.5-coder:7b"),
+            model: ollama(model),
             providerOptions: {
                 ollama: {
                     options: { num_ctx: 2048 },

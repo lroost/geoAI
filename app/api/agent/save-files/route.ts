@@ -2,9 +2,8 @@ import { existsSync } from "node:fs"
 import fs from "node:fs/promises"
 import path from "node:path"
 
-// Wie viel kleiner darf ein neuer Block sein, bevor wir ihn als "Snippet" ablehnen?
-// 0.4 = wenn der neue Inhalt weniger als 40% der bestehenden Datei ist → kein Überschreiben
-const MIN_SIZE_RATIO = 0.4
+// Minimale Byte-Länge, unter der ein Block als Snippet gilt und nicht überschreibt
+const MIN_CONTENT_BYTES = 50
 
 // Sprache → Standard-Dateiname wenn kein Kommentar gefunden
 const LANG_TO_FILE: Record<string, string> = {
@@ -118,21 +117,16 @@ export async function POST(req: Request) {
                 const fullPath = path.resolve(projectRoot, block.filename)
 
                 // Sicherheit: kein Path-Traversal
-                if (!fullPath.startsWith(projectRoot)) {
+                if (!fullPath.startsWith(projectRoot + path.sep) && fullPath !== projectRoot) {
                     errors.push(`Übersprungen (unsicherer Pfad): ${block.filename}`)
                     continue
                 }
 
                 // Schutz vor partiellen Überschreibungen:
-                // Wenn die Datei existiert und der neue Inhalt deutlich kürzer ist,
-                // handelt es sich wahrscheinlich um ein Snippet, nicht die vollständige Datei.
-                if (existsSync(fullPath)) {
-                    const existing = await fs.readFile(fullPath, "utf-8")
-                    const ratio = block.content.length / existing.length
-                    if (ratio < MIN_SIZE_RATIO) {
-                        skipped.push(block.filename)
-                        continue
-                    }
+                // Sehr kurze Blöcke sind wahrscheinlich Snippets, keine vollständigen Dateien.
+                if (block.content.trim().length < MIN_CONTENT_BYTES) {
+                    skipped.push(block.filename)
+                    continue
                 }
 
                 await fs.mkdir(path.dirname(fullPath), { recursive: true })

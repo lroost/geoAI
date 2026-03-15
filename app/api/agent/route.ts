@@ -15,7 +15,6 @@ const ALLOWED_COMMAND_PREFIXES = [
     "npm ci",
     "npx ",
     "node ",
-    "ls",
     "cat ",
 ]
 
@@ -27,7 +26,10 @@ function isBlockedFile(filePath: string): boolean {
 }
 
 function isAllowedCommand(cmd: string): boolean {
-    return ALLOWED_COMMAND_PREFIXES.some((prefix) => cmd.trim().toLowerCase().startsWith(prefix))
+    const trimmed = cmd.trim().toLowerCase()
+    // Allow bare "ls" or "ls <args>" but not lsblk/lsof/etc.
+    if (trimmed === "ls" || trimmed.startsWith("ls ")) return true
+    return ALLOWED_COMMAND_PREFIXES.some((prefix) => trimmed.startsWith(prefix))
 }
 
 export async function POST(req: Request) {
@@ -51,7 +53,7 @@ export async function POST(req: Request) {
         // Pfad-Validierung: resolved path muss innerhalb von projectRoot liegen
         function resolveSafe(filePath: string): string {
             const resolved = path.resolve(projectRoot, filePath)
-            if (!resolved.startsWith(projectRoot)) {
+            if (!resolved.startsWith(projectRoot + path.sep) && resolved !== projectRoot) {
                 throw new Error(`Path traversal nicht erlaubt: ${filePath}`)
             }
             return resolved

@@ -1,14 +1,14 @@
 "use client"
 
-import { memo } from "react"
-import type { UIMessage } from "ai" // Fix: UIMessage statt Message
-import ReactMarkdown from "react-markdown"
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
-import { oneLight } from "react-syntax-highlighter/dist/esm/styles/prism"
 import { CopyButton } from "@/components/copy-button"
 import { ToolCallView, type ToolInvocationPart } from "@/components/tool-call-view"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
+import type { UIMessage } from "ai" // Fix: UIMessage statt Message
+import { memo } from "react"
+import ReactMarkdown from "react-markdown"
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter"
+import { oneLight } from "react-syntax-highlighter/dist/esm/styles/prism"
 
 interface ChatBubbleProps {
     message: UIMessage | { role: string; content?: string; parts?: UIMessage["parts"]; id?: string }
@@ -43,8 +43,10 @@ export const ChatBubble = memo(function ChatBubble({ message }: ChatBubbleProps)
 
     return (
         <div className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
-            <div className={`flex flex-col gap-1 ${isUser ? "items-end" : "items-start"} max-w-[85%]`}>
-                {/* Tool-Invocations werden außerhalb der Bubble angezeigt */}
+            <div
+                className={`flex flex-col gap-1 ${isUser ? "items-end" : "items-start"} max-w-[85%]`}
+            >
+                {/* Tool-Invocations werden ausserhalb der Bubble angezeigt */}
                 {toolParts.length > 0 && (
                     <div className="w-full">
                         {toolParts.map(({ part, key }) => (
@@ -66,7 +68,9 @@ export const ChatBubble = memo(function ChatBubble({ message }: ChatBubbleProps)
                             <Badge
                                 variant="outline"
                                 className={`text-[10px] uppercase font-display tracking-wider border-none px-0 ${
-                                    isUser ? "text-primary-foreground/80" : "text-secondary font-bold"
+                                    isUser
+                                        ? "text-primary-foreground/80"
+                                        : "text-secondary font-bold"
                                 }`}
                             >
                                 {isUser ? "Du" : "AI"}

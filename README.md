@@ -47,7 +47,7 @@ brew install ollama
 
 ### Schritt 3: Das KI-Modell herunterladen
 
-Das Modell ist die eigentliche "KI". Es ist ca. 4 GB groß – einmalig herunterladen:
+Das Modell ist die eigentliche "KI". Es ist ca. 4 GB gross – einmalig herunterladen:
 
 ```bash
 ollama pull qwen2.5-coder:7b

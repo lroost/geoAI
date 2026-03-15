@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 
-// Konfiguration für Inter (Fließtext)
+// Konfiguration für Inter (Fliesstext)
 const inter = Inter({
     subsets: ["latin"],
     variable: "--font-sans",

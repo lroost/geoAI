@@ -1,6 +1,6 @@
 "use client"
 
-import { Code2, FileText, History as HistoryIcon, Map as MapIcon } from "lucide-react"
+import { Bot, Code2, FileText, History as HistoryIcon, Map as MapIcon } from "lucide-react"
 import { useState } from "react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible"
@@ -19,6 +19,8 @@ import { Switch } from "@/components/ui/switch"
 interface ChatHistoryItem {
     id: string
     title?: string
+    agentMode?: boolean
+    workDir?: string
 }
 
 interface AppSidebarProps {
@@ -51,7 +53,7 @@ export function AppSidebar({
                         <MapIcon className="w-5 h-5" />
                     </div>
                     <span className="font-display font-bold tracking-tight text-secondary">
-                        Geo-LLM
+                        Local LLM
                     </span>
                 </div>
             </SidebarHeader>
@@ -68,12 +70,23 @@ export function AppSidebar({
                                 <SidebarMenuItem key={chat.id}>
                                     <SidebarMenuButton
                                         onClick={() => onLoadChat(chat.id)}
-                                        className={`text-xs h-8 ${currentChatId === chat.id ? "bg-secondary/10 text-secondary" : ""}`}
+                                        className={`text-xs h-auto min-h-8 py-1.5 ${currentChatId === chat.id ? "bg-secondary/10 text-secondary" : ""}`}
                                     >
-                                        <HistoryIcon className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
-                                        <span className="truncate font-medium">
-                                            {chat.title || "Unbenannter Chat"}
-                                        </span>
+                                        {chat.agentMode ? (
+                                            <Bot className="w-3.5 h-3.5 mr-2 shrink-0 text-primary/60" />
+                                        ) : (
+                                            <HistoryIcon className="w-3.5 h-3.5 mr-2 shrink-0 text-muted-foreground" />
+                                        )}
+                                        <div className="flex flex-col items-start min-w-0">
+                                            <span className="truncate font-medium w-full">
+                                                {chat.title || "Unbenannter Chat"}
+                                            </span>
+                                            {chat.agentMode && chat.workDir && (
+                                                <span className="truncate text-[9px] font-mono text-primary/40 w-full">
+                                                    {chat.workDir.split("/").slice(-2).join("/")}
+                                                </span>
+                                            )}
+                                        </div>
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
                             ))

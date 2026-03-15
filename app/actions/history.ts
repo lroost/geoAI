@@ -13,19 +13,30 @@ interface Message {
     content: string
 }
 
-export async function saveChat(chatId: string, messages: Message[], title?: string) {
+export interface ChatMeta {
+    agentMode?: boolean
+    workDir?: string
+    techStack?: string
+}
+
+export async function saveChat(
+    chatId: string,
+    messages: Message[],
+    title?: string,
+    meta?: ChatMeta,
+) {
     if (!existsSync(historyPath)) {
         await fs.mkdir(historyPath, { recursive: true })
     }
     const filePath = path.join(historyPath, `${chatId}.json`)
 
-    let existingData: { title?: string } = {}
+    let existingData: { title?: string; agentMode?: boolean; workDir?: string; techStack?: string } =
+        {}
     if (existsSync(filePath)) {
         const content = await fs.readFile(filePath, "utf-8")
         existingData = JSON.parse(content)
     }
 
-    // Wir behalten den alten Titel, außer ein neuer wird explizit geliefert
     const finalTitle = title || existingData.title || "Neuer Chat"
 
     await fs.writeFile(
@@ -36,6 +47,10 @@ export async function saveChat(chatId: string, messages: Message[], title?: stri
                 updatedAt: new Date().toISOString(),
                 messages,
                 title: finalTitle,
+                // Metadaten: nur überschreiben wenn explizit mitgegeben
+                agentMode: meta?.agentMode ?? existingData.agentMode ?? false,
+                workDir: meta?.workDir ?? existingData.workDir ?? "",
+                techStack: meta?.techStack ?? existingData.techStack ?? "vanilla",
             },
             null,
             4,

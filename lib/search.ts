@@ -15,88 +15,17 @@ export interface SearchResult {
 }
 
 const STOP_WORDS = new Set([
-    "der",
-    "die",
-    "das",
-    "ein",
-    "eine",
-    "und",
-    "oder",
-    "in",
-    "von",
-    "zu",
-    "mit",
-    "für",
-    "auf",
-    "ist",
-    "sind",
-    "wie",
-    "was",
-    "ich",
-    "du",
-    "wir",
-    "the",
-    "a",
-    "an",
-    "is",
-    "are",
-    "and",
-    "or",
-    "in",
-    "of",
-    "to",
-    "for",
-    "with",
-    "how",
-    "do",
-    "can",
-    "this",
-    "that",
-    "it",
-    "be",
-    "has",
-    "have",
-    "not",
-    "but",
-    "from",
-    "at",
-    "by",
-    "on",
-    "as",
-    "so",
-    "if",
-    "my",
-    "was",
-    "will",
-    "would",
-    "should",
-    "could",
-    "been",
-    "being",
-    "which",
-    "when",
-    "where",
-    "what",
-    "who",
-    "there",
-    "their",
-    "them",
-    "then",
-    "than",
-    "also",
-    "just",
-    "about",
-    "more",
-    "some",
-    "other",
-    "into",
-    "use",
-    "using",
-    "used",
-    "does",
-    "did",
-    "make",
-    "made",
+    // Deutsch
+    "der", "die", "das", "ein", "eine", "und", "oder", "in", "von",
+    "zu", "mit", "für", "auf", "ist", "sind", "wie", "was", "ich", "du", "wir",
+    // Englisch
+    "the", "a", "an", "is", "are", "and", "or", "of", "to", "for",
+    "with", "how", "do", "can", "this", "that", "it", "be", "has", "have",
+    "not", "but", "from", "at", "by", "on", "as", "so", "if", "my", "was",
+    "will", "would", "should", "could", "been", "being", "which", "when",
+    "where", "what", "who", "there", "their", "them", "then", "than",
+    "also", "just", "about", "more", "some", "other", "into",
+    "use", "using", "used", "does", "did", "make", "made",
 ])
 
 function tokenize(text: string): string[] {
@@ -109,6 +38,22 @@ function tokenize(text: string): string[] {
 
 let cachedChunks: DocChunk[] | null = null
 let cachedIdf: Map<string, number> | null = null
+const QUERY_ALIASES: Record<string, string[]> = {
+    shadcn: ["radix", "component", "ui"],
+    tailwind: ["utility", "class", "css"],
+    maplibre: ["map", "layer", "source", "style"],
+    maptiler: ["tiles", "geocoding", "api", "style"],
+}
+
+function expandQueryTokens(tokens: string[]): string[] {
+    const expanded = new Set(tokens)
+    for (const token of tokens) {
+        const aliases = QUERY_ALIASES[token]
+        if (!aliases) continue
+        for (const alias of aliases) expanded.add(alias)
+    }
+    return [...expanded]
+}
 
 async function loadChunks(): Promise<DocChunk[]> {
     if (cachedChunks) return cachedChunks
@@ -166,7 +111,7 @@ export async function searchDocs(query: string, topK = 3): Promise<SearchResult[
     if (chunks.length === 0) return []
 
     const idf = buildIdf(chunks)
-    const queryTokens = tokenize(query)
+    const queryTokens = expandQueryTokens(tokenize(query))
     if (queryTokens.length === 0) return []
 
     const scored: SearchResult[] = chunks.map((chunk) => {
@@ -176,7 +121,8 @@ export async function searchDocs(query: string, topK = 3): Promise<SearchResult[
 
         let score = 0
         for (const token of queryTokens) {
-            const tf = (contentLower.match(new RegExp(`\\b${token}`, "g")) ?? []).length
+            const safeToken = token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+            const tf = (contentLower.match(new RegExp(`\\b${safeToken}`, "g")) ?? []).length
             const termIdf = idf.get(token) ?? 1
             let tokenScore = Math.log(1 + tf) * termIdf
 

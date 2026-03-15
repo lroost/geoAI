@@ -3,13 +3,20 @@
     "version": "0.1.0",
     "private": true,
     "scripts": {
-        "dev": "next dev --webpack",
+        "dev": "npm run ollama:ensure && next dev --webpack",
         "build": "next build --webpack",
         "start": "next start",
         "lint": "biome check .",
         "lint:fix": "biome check --fix .",
         "format": "biome format --fix .",
-        "chunk-docs": "node scripts/chunk-docs.js"
+        "chunk-docs": "node scripts/chunk-docs.js",
+        "ollama:ensure": "node scripts/ensure-ollama.js",
+        "ollama:serve": "ollama serve",
+        "ollama:pull": "ollama pull qwen2.5-coder:7b",
+        "ollama:health": "curl -sf http://127.0.0.1:11434/api/tags >/dev/null && echo \"Ollama ist erreichbar\" || (echo \"Ollama nicht erreichbar (ollama serve starten)\" && exit 1)",
+        "tauri": "tauri",
+        "desktop:dev": "tauri dev",
+        "desktop:build": "tauri build"
     },
     "dependencies": {
         "@ai-sdk/react": "^3.0.99",
@@ -33,6 +40,7 @@
     "devDependencies": {
         "@biomejs/biome": "^2.4.4",
         "@tailwindcss/postcss": "^4",
+        "@tauri-apps/cli": "^2.10.0",
         "@types/node": "^25",
         "@types/react": "^19",
         "@types/react-dom": "^19",

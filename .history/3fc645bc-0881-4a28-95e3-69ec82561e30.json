@@ -1,0 +1,15 @@
+{
+    "id": "3fc645bc-0881-4a28-95e3-69ec82561e30",
+    "updatedAt": "2026-03-15T20:07:16.676Z",
+    "messages": [
+        {
+            "role": "user",
+            "content": "Bitte erstelle mir eine einfache Todo-App mit Javascript, HTML und CSS."
+        },
+        {
+            "role": "assistant",
+            "content": "Natürlich! Hier ist ein einfaches Beispiel für eine Todo-App mit HTML, CSS und Javascript:\n\n```html\n<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Todo App</title>\n    <link href=\"https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css\" rel=\"stylesheet\">\n</head>\n<body class=\"bg-gray-100 p-4\">\n    <div class=\"max-w-md mx-auto bg-white p-8 rounded shadow\">\n        <h1 class=\"text-2xl font-bold mb-4\">Todo App</h1>\n        <div class=\"mb-4\">\n            <input type=\"text\" id=\"todoInput\" class=\"w-full px-4 py-2 rounded border border-gray-300\" placeholder=\"Add a new todo\">\n            <button id=\"addButton\" class=\"px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600\">Add</button>\n        </div>\n        <ul id=\"todoList\" class=\"space-y-2\"></ul>\n    </div>\n\n    <script>\n        document.getElementById('addButton').addEventListener('click', function() {\n            const todoInput = document.getElementById('todoInput');\n            const todoText = todoInput.value.trim();\n\n            if (todoText) {\n                const todoList = document.getElementById('todoList');\n                const li = document.createElement('li');\n                li.textContent = todoText;\n                li.className = 'bg-gray-200 p-2 rounded';\n                todoList.appendChild(li);\n                todoInput.value = '';\n            }\n        });\n    </script>\n</body>\n</html>\n```\n\n### Erklärung:\n1. **HTML-Struktur**:\n    - Ein `input`-Feld für die Eingabe der neuen Todos.\n    - Ein `button` zur Hinzufügung der neuen Todos.\n    - Eine `ul`-Liste, in der die Todos angezeigt werden.\n\n2. **CSS**:\n    - TailwindCSS wird verwendet, um eine grundlegende Stylingstruktur zu erhalten.\n\n3. **Javascript**:\n    - Ein Event-Listener wird hinzugefügt, der beim Klicken auf den Button ausgelöst wird.\n    - Der Wert des Eingabefelds wird geprüft und, wenn er nicht leer ist, als neues `li`-Element zur Todo-Liste hinzugefügt.\n\nDieser Code bietet eine einfache, funktionale Todo-App, die nur HTML, CSS und Javascript verwendet."
+        }
+    ],
+    "title": "\"Todo-App mit JS, HTML, CSS\""
+}
